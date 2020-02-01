@@ -83,7 +83,7 @@ var generateAd = function () {
 
   return ad;
 };
-
+/* Функция делает клон метки объявления */
 var renderAd = function (ad) {
   var adElement = markAdTemplate.cloneNode(true);
 
