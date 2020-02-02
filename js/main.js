@@ -32,7 +32,7 @@ var URL_PHOTOS = [
 ];
 
 /* класс шаблона метки объяления */
-var markAdTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
+var markPinAdTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
 /* класс куда будует добаляеться фрагмент с метками */
 var markAdMap = document.querySelector('.map__pins');
 
@@ -63,7 +63,7 @@ var generateAd = function () {
       },
       'offer': {
         'title': 'Заголовок предложения',
-        'address': '600, 350',
+        'address': location.x + ',' + location.y,
         'price': getRandomInt(200, 5000),
         'type': HOUSING[getRandomInt(0, HOUSING.length)],
         'rooms': getRandomInt(1, 6),
@@ -83,15 +83,17 @@ var generateAd = function () {
 
   return ad;
 };
-/* Функция делает клон метки объявления */
-var renderAd = function (ad) {
-  var adElement = markAdTemplate.cloneNode(true);
+/* Функция делает клон объявления */
+var createPinAd = function (ad) {
+  /* Клон метки объявления */
+  var adPinElement = markPinAdTemplate.cloneNode(true);
 
-  adElement.style = 'left:' + (ad.location.x - 20) + 'px; top:' + (ad.location.y - 40) + 'px;';
-  adElement.querySelector('img').src = ad.author.avatar;
-  adElement.querySelector('img').alt = ad.offer.title;
+  /* Блок описывает метку объявления */
+  adPinElement.style = 'left:' + (ad.location.x - 20) + 'px; top:' + (ad.location.y - 40) + 'px;';
+  adPinElement.querySelector('img').src = ad.author.avatar;
+  adPinElement.querySelector('img').alt = ad.offer.title;
 
-  return adElement;
+  return adPinElement;
 };
 
 /* Переключение карты в активное состояние */
@@ -100,9 +102,9 @@ document.querySelector('.map').classList.remove('map--faded');
 var fragment = document.createDocumentFragment();
 var ads = generateAd();
 
-for (var i = 0; i < COUNT_AD; i++) {
-  fragment.appendChild(renderAd(ads[i]));
-}
+ads.forEach(function (item, i) {
+  fragment.appendChild(createPinAd(ads[i]));
+});
 
 markAdMap.append(fragment);
 
