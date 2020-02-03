@@ -53,17 +53,20 @@ var generateArray = function (arr) {
 };
 
 /* Функция создает случайных объявлений */
-var generateAd = function () {
-  var ad = [];
+var generateAds = function () {
+  var ads = [];
 
   for (var i = 0; i < COUNT_AD; i++) {
-    ad[i] = {
+    var x = getRandomInt(100, 500); // TODO: случайное число основанное на определении размера блока, в котором перетаскивается метка.
+    var y = getRandomInt(130, 630);
+
+    ads[i] = {
       'author': {
         'avatar': 'img/avatars/user0' + (i + 1) + '.png'
       },
       'offer': {
         'title': 'Заголовок предложения',
-        'address': location.x + ',' + location.y,
+        'address': x + ',' + y,
         'price': getRandomInt(200, 5000),
         'type': HOUSING[getRandomInt(0, HOUSING.length)],
         'rooms': getRandomInt(1, 6),
@@ -75,13 +78,13 @@ var generateAd = function () {
         'photos': generateArray(URL_PHOTOS)
       },
       'location': {
-        'x': getRandomInt(100, 500), // TODO: случайное число основанное на определении размера блока, в котором перетаскивается метка.
-        'y': getRandomInt(130, 630)
+        'x': x,
+        'y': y
       }
     };
   }
 
-  return ad;
+  return ads;
 };
 /* Функция делает клон объявления */
 var createPinAd = function (ad) {
@@ -89,7 +92,7 @@ var createPinAd = function (ad) {
   var adPinElement = markPinAdTemplate.cloneNode(true);
 
   /* Блок описывает метку объявления */
-  adPinElement.style = 'left:' + (ad.location.x - 20) + 'px; top:' + (ad.location.y - 40) + 'px;';
+  adPinElement.style = 'left:' + (ad.location.x + 25) + 'px; top:' + (ad.location.y + 70) + 'px;';
   adPinElement.querySelector('img').src = ad.author.avatar;
   adPinElement.querySelector('img').alt = ad.offer.title;
 
@@ -100,10 +103,10 @@ var createPinAd = function (ad) {
 document.querySelector('.map').classList.remove('map--faded');
 
 var fragment = document.createDocumentFragment();
-var ads = generateAd();
+var ads = generateAds();
 
-ads.forEach(function (item, i) {
-  fragment.appendChild(createPinAd(ads[i]));
+ads.forEach(function (item) {
+  fragment.appendChild(createPinAd(item));
 });
 
 markAdMap.append(fragment);
