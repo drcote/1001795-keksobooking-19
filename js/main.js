@@ -119,9 +119,9 @@ var createAd = function (ad) {
   var popupFeature = cardElement.querySelectorAll('.popup__feature');
   var popupPhotos = cardElement.querySelector('.popup__photos');
 
-  for (var popupFeatureItem of popupFeature) {
-    popupFeatureItem.style = 'display: none';
-  }
+  popupFeature.forEach(function (feature) {
+    feature.style = 'display: none';
+  });
 
   cardElement.querySelector('.popup__title').textContent = ad.offer.title;
   cardElement.querySelector('.popup__text--address').textContent = ad.offer.address;
