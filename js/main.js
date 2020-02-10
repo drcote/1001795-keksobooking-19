@@ -1,5 +1,12 @@
 'use strict';
 
+var KEY_ENTER = 'Enter';
+
+/* размеры метки объявления */
+var PIN_WIDTH = 65;
+var PIN_HEIGHT = 65;
+var PIN_ARROW = 19;
+
 /* Количество объявлений */
 var COUNT_AD = 8;
 
@@ -37,7 +44,6 @@ var URL_PHOTOS = [
   'http://o0.github.io/assets/images/tokyo/hotel2.jpg',
   'http://o0.github.io/assets/images/tokyo/hotel3.jpg'
 ];
-
 /* класс шаблона метки объяления */
 var markPinAdTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
 /* шаблон с инфорацией объявления */
@@ -46,6 +52,20 @@ var cardTemplate = document.querySelector('#card').content.querySelector('.map__
 var markAdMap = document.querySelector('.map__pins');
 
 var positionCard = document.querySelector('.map').querySelector('.map__filters-container');
+/* кнопка создания  нового объявления*/
+var mainPinButton = document.querySelector('.map__pin--main');
+/* форма объявления */
+var adForm = document.querySelector('.ad-form');
+/* адрес формы */
+var formAdress = document.querySelector('#address');
+/* координаты метки объявления */
+var pinMainRect = mainPinButton.getBoundingClientRect();
+/* поля формы объявления */
+var formFieldset = document.querySelectorAll('.ad-form__element');
+/* поле выбора кол-ва комнат */
+var formRoomNumber = document.querySelector('#room_number');
+/* поле выбора кол-ва гостей */
+var formCapacity = document.querySelector('#capacity');
 
 /* Функция генерации случайных чисел где min входит, а max не входит */
 var getRandomInt = function (min, max) {
@@ -147,8 +167,21 @@ var createAd = function (ad) {
   return cardElement;
 };
 
-/* Переключение карты в активное состояние */
-document.querySelector('.map').classList.remove('map--faded');
+/* Функия активирующая поля */
+var activateForm = function () {
+  adForm.classList.remove('ad-form--disabled');
+  formFieldset.forEach(function (item) {
+    item.disabled = false;
+  });
+};
+
+/* Функция отключающая все поля */
+var deactivateForm = function () {
+  adForm.classList.add('ad-form--disabled');
+  formFieldset.forEach(function (item) {
+    item.disabled = true;
+  });
+};
 
 var fragment = document.createDocumentFragment();
 var ads = generateAds();
@@ -157,7 +190,78 @@ ads.forEach(function (item) {
   fragment.appendChild(createPinAd(item));
 });
 
-markAdMap.append(fragment);
+/* Переключение карты в активное состояние */
+var activePage = function () {
+  document.querySelector('.map').classList.remove('map--faded');
+  activateForm();
+  formAdress.value = coordinatePinMainActive;
+  markAdMap.append(fragment);
+};
+
+/* расчет координат в неактивном состоянии */
+var coordinatePinMainInactive = Math.floor((pinMainRect.x + (PIN_WIDTH / 2))) +
+  ',' + Math.floor((pinMainRect.y + (PIN_HEIGHT / 2)));
+
+/* расчет координат в активном состоянии */
+var coordinatePinMainActive = Math.floor((pinMainRect.x + (PIN_WIDTH / 2))) +
+  ',' + Math.floor((pinMainRect.y + (PIN_HEIGHT + PIN_ARROW)));
+
+/* поиск элемента в списке кол-ва мест */
+var elementCapacity = function (index) {
+  return formCapacity.querySelector('option[value="' + index + '"]');
+};
+
+/* функция изменения кол-ва комнат */
+var onChangeRoomNumber = function () {
+  var currentRoomNumber = formRoomNumber.value;
+  var optionsCapacity = formCapacity.querySelectorAll('option');
+
+  optionsCapacity.forEach(function (item) {
+    item.disabled = true;
+  });
+
+  optionsCapacity[0].disabled = false;
+
+  switch (currentRoomNumber) {
+    case 'any':
+      optionsCapacity.forEach(function (item) {
+        item.disabled = false;
+      });
+      break;
+    case '1':
+    case '2':
+    case '3':
+      for (var i = 1; i <= +currentRoomNumber; i++) {
+        elementCapacity(i).disabled = false;
+      }
+      break;
+    case '100':
+      elementCapacity(0).disabled = false;
+      break;
+
+    default:
+
+  }
+};
 
 /* Вывод карточки оъявления */
-positionCard.before(createAd(ads[0]));
+//positionCard.before(createAd(ads[0]));
+
+mainPinButton.addEventListener('click', function () {
+  activePage();
+});
+mainPinButton.addEventListener('keydown', function (evt) {
+  if (evt.key === KEY_ENTER) {
+    activePage();
+  }
+});
+
+formRoomNumber.addEventListener('change', onChangeRoomNumber);
+
+deactivateForm();
+
+/* работа с формой */
+/* заполенение поля адрес когда метка не активна */
+formAdress.value = coordinatePinMainInactive;
+
+
