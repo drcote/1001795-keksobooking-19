@@ -170,6 +170,7 @@ var createAd = function (ad) {
 /* Функия активирующая поля */
 var activateForm = function () {
   adForm.classList.remove('ad-form--disabled');
+  positionCard.before(createAd(ads[0]));
   formFieldset.forEach(function (item) {
     item.disabled = false;
   });
@@ -245,7 +246,6 @@ var onChangeRoomNumber = function () {
 };
 
 /* Вывод карточки оъявления */
-//positionCard.before(createAd(ads[0]));
 
 mainPinButton.addEventListener('click', function () {
   activePage();
