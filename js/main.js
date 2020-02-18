@@ -38,6 +38,16 @@ var FEATURES_ITEMS = [
   'conditioner'
 ];
 
+/* Объект отношения мин цены к типу строения */
+var HOUSING_PRICE = {
+  'palace': 10000,
+  'flat': 1000,
+  'house': 5000,
+  'bungalo': 0
+};
+
+var MAX_PRICE = 1000000;
+
 /* Массив адресов фотографий */
 var URL_PHOTOS = [
   'http://o0.github.io/assets/images/tokyo/hotel1.jpg',
@@ -55,7 +65,7 @@ var positionCard = document.querySelector('.map').querySelector('.map__filters-c
 /* кнопка создания  нового объявления*/
 var mainPinButton = document.querySelector('.map__pin--main');
 /* форма объявления */
-var adForm = document.querySelector('.ad-form');
+var formAd = document.querySelector('.ad-form');
 /* адрес формы */
 var formAdress = document.querySelector('#address');
 /* координаты метки объявления */
@@ -66,6 +76,14 @@ var formFieldset = document.querySelectorAll('.ad-form__element');
 var formRoomNumber = document.querySelector('#room_number');
 /* поле выбора кол-ва гостей */
 var formCapacity = document.querySelector('#capacity');
+/* поле типа жилья */
+var formType = document.querySelector('#type');
+/* поле стоимости жилья */
+var formPrice = document.querySelector('#price');
+/* поле въезда */
+var formTimein = document.querySelector('#timein');
+/* полн выезда */
+var formTimeout = document.querySelector('#timeout');
 
 /* Функция генерации случайных чисел где min входит, а max не входит */
 var getRandomInt = function (min, max) {
@@ -169,7 +187,7 @@ var createAd = function (ad) {
 
 /* Функия активирующая поля */
 var activateForm = function () {
-  adForm.classList.remove('ad-form--disabled');
+  formAd.classList.remove('ad-form--disabled');
   positionCard.before(createAd(ads[0]));
   formFieldset.forEach(function (item) {
     item.disabled = false;
@@ -178,7 +196,7 @@ var activateForm = function () {
 
 /* Функция отключающая все поля */
 var deactivateForm = function () {
-  adForm.classList.add('ad-form--disabled');
+  formAd.classList.add('ad-form--disabled');
   formFieldset.forEach(function (item) {
     item.disabled = true;
   });
@@ -212,8 +230,14 @@ var elementCapacity = function (index) {
   return formCapacity.querySelector('option[value="' + index + '"]');
 };
 
+/* Проверка формы на ошибки */
+var onChangeForm = function () {
+  changeRoomNumber();
+  checkPriceForm();
+};
+
 /* функция изменения кол-ва комнат */
-var onChangeRoomNumber = function () {
+var changeRoomNumber = function () {
   var currentRoomNumber = formRoomNumber.value;
   var optionsCapacity = formCapacity.querySelectorAll('option');
 
@@ -223,26 +247,51 @@ var onChangeRoomNumber = function () {
 
   optionsCapacity[0].disabled = false;
 
-  switch (currentRoomNumber) {
-    case 'any':
-      optionsCapacity.forEach(function (item) {
-        item.disabled = false;
-      });
-      break;
-    case '1':
-    case '2':
-    case '3':
-      for (var i = 1; i <= +currentRoomNumber; i++) {
-        elementCapacity(i).disabled = false;
-      }
-      break;
-    case '100':
-      elementCapacity(0).disabled = false;
-      break;
-
-    default:
-
+  if (currentRoomNumber === 'any') {
+    optionsCapacity.forEach(function (item) {
+      item.disabled = false;
+      formCapacity.setCustomValidity('Поля должны быть выбраны');
+    });
   }
+
+  if (currentRoomNumber === '1' || currentRoomNumber === '2' || currentRoomNumber === '3') {
+    for (var i = 1; i <= +currentRoomNumber; i++) {
+      elementCapacity(i).disabled = false;
+    }
+  }
+
+  if (currentRoomNumber === '100') {
+    elementCapacity(0).disabled = false;
+  }
+};
+
+/* Проверка цены за ночь */
+var checkPriceForm = function () {
+
+};
+
+/* Измененение типа жилья */
+var onChangeTypeForm = function () {
+  formPrice.placeholder = HOUSING_PRICE[formType.value];
+};
+
+/* Ввод значений цены */
+var onInputPrice = function () {
+  var minPrice = HOUSING_PRICE[formType.value];
+  var currentPrice = formPrice.value;
+
+  if (currentPrice < minPrice) {
+    formPrice.setCustomValidity('Цена должна быть больше ' + minPrice);
+  } else if (currentPrice > MAX_PRICE) {
+    formPrice.setCustomValidity('Цена должна быть ниже ' + MAX_PRICE);
+  } else {
+    formPrice.setCustomValidity('');
+  }
+};
+
+var onChangeTimes = function (evt) {
+  formTimeout.value = evt.target.value;
+  formTimein.value = evt.target.value;
 };
 
 /* Вывод карточки оъявления */
@@ -256,7 +305,11 @@ mainPinButton.addEventListener('keydown', function (evt) {
   }
 });
 
-formRoomNumber.addEventListener('change', onChangeRoomNumber);
+formAd.addEventListener('change', onChangeForm);
+formType.addEventListener('change', onChangeTypeForm);
+formPrice.addEventListener('input', onInputPrice);
+formTimein.addEventListener('change', onChangeTimes);
+formTimeout.addEventListener('change', onChangeTimes);
 
 deactivateForm();
 
