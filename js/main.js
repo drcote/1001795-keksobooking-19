@@ -226,48 +226,47 @@ var coordinatePinMainActive = Math.floor((pinMainRect.x + (PIN_WIDTH / 2))) +
   ',' + Math.floor((pinMainRect.y + (PIN_HEIGHT + PIN_ARROW)));
 
 /* поиск элемента в списке кол-ва мест */
-var elementCapacity = function (index) {
+/* var elementCapacity = function (index) {
   return formCapacity.querySelector('option[value="' + index + '"]');
-};
+}; */
 
-/* Проверка формы на ошибки */
+/* функция проверки комнат и мест */
 var onChangeForm = function () {
-  changeRoomNumber();
-  checkPriceForm();
-};
-
-/* функция изменения кол-ва комнат */
-var changeRoomNumber = function () {
   var currentRoomNumber = formRoomNumber.value;
-  var optionsCapacity = formCapacity.querySelectorAll('option');
+  var currentCapacity = formCapacity.value;
 
-  optionsCapacity.forEach(function (item) {
-    item.disabled = true;
-  });
-
-  optionsCapacity[0].disabled = false;
-
-  if (currentRoomNumber === 'any') {
-    optionsCapacity.forEach(function (item) {
-      item.disabled = false;
-      formCapacity.setCustomValidity('Поля должны быть выбраны');
-    });
+  if (currentRoomNumber === '1') {
+    if (currentCapacity === '1') {
+      formCapacity.setCustomValidity('');
+    } else {
+      formCapacity.setCustomValidity('Для 1 гостя');
+    }
   }
 
-  if (currentRoomNumber === '1' || currentRoomNumber === '2' || currentRoomNumber === '3') {
-    for (var i = 1; i <= +currentRoomNumber; i++) {
-      elementCapacity(i).disabled = false;
+  if (currentRoomNumber === '2') {
+    if (currentCapacity === '1' || currentCapacity === '2') {
+      formCapacity.setCustomValidity('');
+    } else {
+      formCapacity.setCustomValidity('Для 1 гостя или для 2 гостей');
+    }
+  }
+
+  if (currentRoomNumber === '3') {
+    if (currentCapacity === '1' || currentCapacity === '2' || currentCapacity === '3') {
+      formCapacity.setCustomValidity('');
+    } else {
+      formCapacity.setCustomValidity('Для 1 гостя или для 2 гостей или для 3 гостей');
     }
   }
 
   if (currentRoomNumber === '100') {
-    elementCapacity(0).disabled = false;
+    if (currentCapacity === '0') {
+      formRoomNumber.setCustomValidity('');
+      formCapacity.setCustomValidity('');
+    } else {
+      formCapacity.setCustomValidity('Не для гостей');
+    }
   }
-};
-
-/* Проверка цены за ночь */
-var checkPriceForm = function () {
-
 };
 
 /* Измененение типа жилья */
