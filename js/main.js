@@ -1,5 +1,12 @@
 'use strict';
 
+var KEY_ENTER = 'Enter';
+
+/* размеры метки объявления */
+var PIN_WIDTH = 65;
+var PIN_HEIGHT = 65;
+var PIN_ARROW = 19;
+
 /* Количество объявлений */
 var COUNT_AD = 8;
 
@@ -31,13 +38,22 @@ var FEATURES_ITEMS = [
   'conditioner'
 ];
 
+/* Объект отношения мин цены к типу строения */
+var HOUSING_PRICE = {
+  'palace': 10000,
+  'flat': 1000,
+  'house': 5000,
+  'bungalo': 0
+};
+
+var MAX_PRICE = 1000000;
+
 /* Массив адресов фотографий */
 var URL_PHOTOS = [
   'http://o0.github.io/assets/images/tokyo/hotel1.jpg',
   'http://o0.github.io/assets/images/tokyo/hotel2.jpg',
   'http://o0.github.io/assets/images/tokyo/hotel3.jpg'
 ];
-
 /* класс шаблона метки объяления */
 var markPinAdTemplate = document.querySelector('#pin').content.querySelector('.map__pin');
 /* шаблон с инфорацией объявления */
@@ -46,6 +62,28 @@ var cardTemplate = document.querySelector('#card').content.querySelector('.map__
 var markAdMap = document.querySelector('.map__pins');
 
 var positionCard = document.querySelector('.map').querySelector('.map__filters-container');
+/* кнопка создания  нового объявления*/
+var mainPinButton = document.querySelector('.map__pin--main');
+/* форма объявления */
+var formAd = document.querySelector('.ad-form');
+/* адрес формы */
+var formAdress = document.querySelector('#address');
+/* координаты метки объявления */
+var pinMainRect = mainPinButton.getBoundingClientRect();
+/* поля формы объявления */
+var formFieldset = document.querySelectorAll('.ad-form__element');
+/* поле выбора кол-ва комнат */
+var formRoomNumber = document.querySelector('#room_number');
+/* поле выбора кол-ва гостей */
+var formCapacity = document.querySelector('#capacity');
+/* поле типа жилья */
+var formType = document.querySelector('#type');
+/* поле стоимости жилья */
+var formPrice = document.querySelector('#price');
+/* поле въезда */
+var formTimein = document.querySelector('#timein');
+/* полн выезда */
+var formTimeout = document.querySelector('#timeout');
 
 /* Функция генерации случайных чисел где min входит, а max не входит */
 var getRandomInt = function (min, max) {
@@ -147,8 +185,22 @@ var createAd = function (ad) {
   return cardElement;
 };
 
-/* Переключение карты в активное состояние */
-document.querySelector('.map').classList.remove('map--faded');
+/* Функия активирующая поля */
+var activateForm = function () {
+  formAd.classList.remove('ad-form--disabled');
+  positionCard.before(createAd(ads[0]));
+  formFieldset.forEach(function (item) {
+    item.disabled = false;
+  });
+};
+
+/* Функция отключающая все поля */
+var deactivateForm = function () {
+  formAd.classList.add('ad-form--disabled');
+  formFieldset.forEach(function (item) {
+    item.disabled = true;
+  });
+};
 
 var fragment = document.createDocumentFragment();
 var ads = generateAds();
@@ -157,7 +209,111 @@ ads.forEach(function (item) {
   fragment.appendChild(createPinAd(item));
 });
 
-markAdMap.append(fragment);
+/* Переключение карты в активное состояние */
+var activePage = function () {
+  document.querySelector('.map').classList.remove('map--faded');
+  activateForm();
+  formAdress.value = coordinatePinMainActive;
+  markAdMap.append(fragment);
+};
+
+/* расчет координат в неактивном состоянии */
+var coordinatePinMainInactive = Math.floor((pinMainRect.x + (PIN_WIDTH / 2))) +
+  ',' + Math.floor((pinMainRect.y + (PIN_HEIGHT / 2)));
+
+/* расчет координат в активном состоянии */
+var coordinatePinMainActive = Math.floor((pinMainRect.x + (PIN_WIDTH / 2))) +
+  ',' + Math.floor((pinMainRect.y + (PIN_HEIGHT + PIN_ARROW)));
+
+/* поиск элемента в списке кол-ва мест */
+/* var elementCapacity = function (index) {
+  return formCapacity.querySelector('option[value="' + index + '"]');
+}; */
+
+/* функция проверки комнат и мест */
+var onChangeForm = function () {
+  var currentRoomNumber = formRoomNumber.value;
+  var currentCapacity = formCapacity.value;
+
+  if (currentRoomNumber === '1') {
+    if (currentCapacity === '1') {
+      formCapacity.setCustomValidity('');
+    } else {
+      formCapacity.setCustomValidity('Для 1 гостя');
+    }
+  }
+
+  if (currentRoomNumber === '2') {
+    if (currentCapacity === '1' || currentCapacity === '2') {
+      formCapacity.setCustomValidity('');
+    } else {
+      formCapacity.setCustomValidity('Для 1 гостя или для 2 гостей');
+    }
+  }
+
+  if (currentRoomNumber === '3') {
+    if (currentCapacity === '1' || currentCapacity === '2' || currentCapacity === '3') {
+      formCapacity.setCustomValidity('');
+    } else {
+      formCapacity.setCustomValidity('Для 1 гостя или для 2 гостей или для 3 гостей');
+    }
+  }
+
+  if (currentRoomNumber === '100') {
+    if (currentCapacity === '0') {
+      formRoomNumber.setCustomValidity('');
+      formCapacity.setCustomValidity('');
+    } else {
+      formCapacity.setCustomValidity('Не для гостей');
+    }
+  }
+};
+
+/* Измененение типа жилья */
+var onChangeTypeForm = function () {
+  formPrice.placeholder = HOUSING_PRICE[formType.value];
+};
+
+/* Ввод значений цены */
+var onInputPrice = function () {
+  var minPrice = HOUSING_PRICE[formType.value];
+  var currentPrice = formPrice.value;
+
+  if (currentPrice < minPrice) {
+    formPrice.setCustomValidity('Цена должна быть больше ' + minPrice);
+  } else if (currentPrice > MAX_PRICE) {
+    formPrice.setCustomValidity('Цена должна быть ниже ' + MAX_PRICE);
+  } else {
+    formPrice.setCustomValidity('');
+  }
+};
+
+var onChangeTimes = function (evt) {
+  formTimeout.value = evt.target.value;
+  formTimein.value = evt.target.value;
+};
 
 /* Вывод карточки оъявления */
-positionCard.before(createAd(ads[0]));
+
+mainPinButton.addEventListener('click', function () {
+  activePage();
+});
+mainPinButton.addEventListener('keydown', function (evt) {
+  if (evt.key === KEY_ENTER) {
+    activePage();
+  }
+});
+
+formAd.addEventListener('change', onChangeForm);
+formType.addEventListener('change', onChangeTypeForm);
+formPrice.addEventListener('input', onInputPrice);
+formTimein.addEventListener('change', onChangeTimes);
+formTimeout.addEventListener('change', onChangeTimes);
+
+deactivateForm();
+
+/* работа с формой */
+/* заполенение поля адрес когда метка не активна */
+formAdress.value = coordinatePinMainInactive;
+
+
